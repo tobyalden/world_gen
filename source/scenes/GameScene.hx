@@ -14,15 +14,22 @@ import openfl.Assets;
 
 class GameScene extends Scene
 {
+    private var level:Level;
+
     override public function begin() {
-        var level = new Level("level");
+        level = new Level("level");
         add(level);
-        for(entity in level.entities) {
-            add(entity);
-        }
     }
 
     override public function update() {
+        if(Key.pressed(Key.R)) {
+            level.randomize();
+            level.updateGraphic();
+        }
+        else if(Key.pressed(Key.C)) {
+            level.cellularAutomata();
+            level.updateGraphic();
+        }
         super.update();
     }
 }

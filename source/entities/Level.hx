@@ -9,52 +9,70 @@ import openfl.Assets;
 
 class Level extends Entity
 {
-    public var entities(default, null):Array<Entity>;
     private var walls:Grid;
     private var tiles:Tilemap;
 
     public function new(levelName:String) {
         super(0, 0);
         type = "walls";
-        loadLevel(levelName);
+        walls = new Grid(1920, 360, 10, 10);
         updateGraphic();
+    }
+
+    private function getSolidsIn3x3Region(centerX:Int, centerY:Int) {
+        var solidCount = 0;
+        for(tileX in (centerX - 1)...(centerX + 2)) {
+            for(tileY in (centerY - 1)...(centerY + 2)) {
+                if(getTile(tileX, tileY)) {
+                    solidCount += 1;
+                }
+            }
+        }
+        return solidCount;
+    }
+
+    public function randomize(solidChance:Float = 0.5) {
+        for(tileX in 0...walls.columns) {
+            for(tileY in 0...walls.rows) {
+                walls.setTile(tileX, tileY, Random.random < solidChance);
+            }
+        }
+    }
+
+    public function makeWalls() {
+        for(tileX in 0...walls.columns) {
+            for(tileY in 0...walls.rows) {
+                if(tileX == 0 || tileX == walls.columns - 1 || tileY == 0 || tileY == walls.rows - 1) {
+                    walls.setTile(tileX, tileY, true);
+                }
+            }
+        }
+    }
+
+    public function cellularAutomata() {
+        for(tileX in 0...walls.columns) {
+            for(tileY in 0...walls.rows) {
+                var hasEnoughNeighbors = getSolidsIn3x3Region(tileX, tileY) >= 5;
+                walls.setTile(tileX, tileY, hasEnoughNeighbors);
+            }
+        }
+    }
+
+    private function getTile(tileX:Int, tileY:Int) {
+        if(tileX < 0 || tileX >= walls.columns || tileY < 0 || tileY >= walls.rows) {
+            return true;
+        }
+        return walls.getTile(tileX, tileY);
     }
 
     override public function update() {
         super.update();
     }
 
-    private function loadLevel(levelName:String) {
-        var levelData = haxe.Json.parse(Assets.getText('levels/${levelName}.json'));
-        for(layerIndex in 0...levelData.layers.length) {
-            var layer = levelData.layers[layerIndex];
-            if(layer.name == "walls") {
-                // Load solid geometry
-                walls = new Grid(levelData.width, levelData.height, layer.gridCellWidth, layer.gridCellHeight);
-                for(tileY in 0...layer.grid2D.length) {
-                    for(tileX in 0...layer.grid2D[0].length) {
-                        walls.setTile(tileX, tileY, layer.grid2D[tileY][tileX] == "1");
-                    }
-                }
-                mask = walls;
-            }
-            else if(layer.name == "entities") {
-                // Load entities
-                entities = new Array<Entity>();
-                for(entityIndex in 0...layer.entities.length) {
-                    var entity = layer.entities[entityIndex];
-                    if(entity.name == "player") {
-                        entities.push(new Player(entity.x, entity.y));
-                    }
-                }
-            }
-        }
-    }
-
     public function updateGraphic() {
         tiles = new Tilemap(
             'graphics/tiles.png',
-            walls.width, walls.height, walls.tileWidth, walls.tileHeight
+            walls.width, walls.height, 10, 10
         );
         for(tileX in 0...walls.columns) {
             for(tileY in 0...walls.rows) {
