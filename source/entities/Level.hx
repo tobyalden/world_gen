@@ -50,12 +50,14 @@ class Level extends Entity
     }
 
     public function cellularAutomata() {
+        var wallsCopy = new Grid(walls.width, walls.height, walls.tileWidth, walls.tileHeight);
         for(tileX in 0...walls.columns) {
             for(tileY in 0...walls.rows) {
                 var hasEnoughNeighbors = getSolidsIn3x3Region(tileX, tileY) >= 5;
-                walls.setTile(tileX, tileY, hasEnoughNeighbors);
+                wallsCopy.setTile(tileX, tileY, hasEnoughNeighbors);
             }
         }
+        walls.loadFromString(wallsCopy.saveToString(",", "\n", "1", "0"));
     }
 
     private function getTile(tileX:Int, tileY:Int) {

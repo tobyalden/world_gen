@@ -17,6 +17,7 @@ class GameScene extends Scene
     private var level:Level;
 
     override public function begin() {
+        camera.scale = 0.5;
         level = new Level("level");
         add(level);
     }
