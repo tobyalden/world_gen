@@ -31,8 +31,34 @@ class GameScene extends Scene
             level.cellularAutomata();
             level.updateGraphic();
         }
+        else if(Key.pressed(Key.F)) {
+            level.fill();
+            level.updateGraphic();
+        }
+        else if(Key.pressed(Key.D)) {
+            level.drunkenWalk();
+            level.updateGraphic();
+        }
+        else if(Key.pressed(Key.G)) {
+            do {
+                level.randomize(0.45 + Random.random * 0.1);
+                for(i in 0...Random.randInt(2)) {
+                    level.drunkenWalk(Random.randInt(100) + 50);
+                }
+                for(i in 0...(Random.randInt(1) + 1)) {
+                    level.cellularAutomata();
+                }
+                for(i in 0...Random.randInt(2)) {
+                    level.drunkenWalk(Random.randInt(100) + 50);
+                }
+                for(i in 0...Random.randInt(2)) {
+                    level.cellularAutomata();
+                }
+            } while (level.getSolidPercentage() < 0.25);
+            level.updateGraphic();
+        }
         else if(Key.pressed(Key.E)) {
-            level.export();
+            level.export(1000, 1000);
         }
         super.update();
     }

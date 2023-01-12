@@ -9,14 +9,25 @@ import openfl.Assets;
 
 class Level extends Entity
 {
+    public static inline var SCALE = 2;
+
     private var walls:Grid;
     private var tiles:Tilemap;
 
     public function new(levelName:String) {
         super(0, 0);
         type = "walls";
-        walls = new Grid(1920, 360, 10, 10);
+        walls = new Grid(Std.int(1920 / SCALE), Std.int(360 / SCALE), 20, 20);
+        fill();
         updateGraphic();
+    }
+
+    public function fill() {
+        for(tileX in 0...walls.columns) {
+            for(tileY in 0...walls.rows) {
+                walls.setTile(tileX, tileY, true);
+            }
+        }
     }
 
     private function getNumSolidsIn3x3Region(centerX:Int, centerY:Int) {
@@ -39,6 +50,18 @@ class Level extends Entity
         }
     }
 
+    public function getSolidPercentage() {
+        var solidCount = 0;
+        for(tileX in 0...walls.columns) {
+            for(tileY in 0...walls.rows) {
+                if(getTile(tileX, tileY)) {
+                    solidCount += 1;
+                }
+            }
+        }
+        return solidCount / (walls.rows * walls.columns);
+    }
+
     public function makeWalls() {
         for(tileX in 0...walls.columns) {
             for(tileY in 0...walls.rows) {
@@ -46,6 +69,21 @@ class Level extends Entity
                     walls.setTile(tileX, tileY, true);
                 }
             }
+        }
+    }
+
+    public function drunkenWalk(steps:Int = 100) {
+        var walker = {x: Random.randInt(walls.columns - 2) + 1, y: Std.int(walls.rows - 2) + 1}
+        for(i in 0...steps) {
+            walls.setTile(walker.x, walker.y, false);
+            if(Random.random < 0.9) {
+                walker.x += HXP.choose(-1, 1);
+            }
+            else {
+                walker.y += HXP.choose(-1, 1);
+            }
+            walker.x = MathUtil.iclamp(walker.x, 1, walls.columns - 1);
+            walker.y = MathUtil.iclamp(walker.y, 1, walls.rows - 1);
         }
     }
 
@@ -75,7 +113,7 @@ class Level extends Entity
     public function updateGraphic() {
         tiles = new Tilemap(
             'graphics/tiles.png',
-            walls.width, walls.height, 10, 10
+            walls.width, walls.height, 20, 20
         );
         for(tileX in 0...walls.columns) {
             for(tileY in 0...walls.rows) {
@@ -87,14 +125,23 @@ class Level extends Entity
         graphic = tiles;
     }
 
-    public function export() {
-        var bitstring = walls.saveToString("", "\n", "1", "0");
+    public function export(mapX:Int, mapY:Int) {
+        var wallsCopy = new Grid(walls.width * SCALE, walls.height * SCALE, walls.tileWidth, walls.tileHeight);
+        for(tileX in 0...walls.columns) {
+            for(tileY in 0...walls.rows) {
+                wallsCopy.setTile(tileX * SCALE, tileY * SCALE, walls.getTile(tileX, tileY));
+                wallsCopy.setTile(tileX * SCALE + 1, tileY * SCALE, walls.getTile(tileX, tileY));
+                wallsCopy.setTile(tileX * SCALE, tileY * SCALE + 1, walls.getTile(tileX, tileY));
+                wallsCopy.setTile(tileX * SCALE + 1, tileY * SCALE + 1, walls.getTile(tileX, tileY));
+            }
+        }
+
+        var bitstring = wallsCopy.saveToString("", "\n", "1", "0");
         var export =
 '<level width="1920" height="360">
     <solids exportMode="Bitstring">${bitstring}</solids>
 </level>';
-        sys.io.File.write("../../../test.oel", false);
-        sys.io.File.saveContent("../../../test.oel", export);
+        var fileName = '${mapX}x${mapY}.oel';
+        sys.io.File.saveContent('../../../${fileName}', export);
     }
 }
-
