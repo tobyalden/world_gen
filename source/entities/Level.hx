@@ -19,7 +19,7 @@ class Level extends Entity
         updateGraphic();
     }
 
-    private function getSolidsIn3x3Region(centerX:Int, centerY:Int) {
+    private function getNumSolidsIn3x3Region(centerX:Int, centerY:Int) {
         var solidCount = 0;
         for(tileX in (centerX - 1)...(centerX + 2)) {
             for(tileY in (centerY - 1)...(centerY + 2)) {
@@ -53,7 +53,8 @@ class Level extends Entity
         var wallsCopy = new Grid(walls.width, walls.height, walls.tileWidth, walls.tileHeight);
         for(tileX in 0...walls.columns) {
             for(tileY in 0...walls.rows) {
-                var hasEnoughNeighbors = getSolidsIn3x3Region(tileX, tileY) >= 5;
+                var numSolidsIn3x3Region = getNumSolidsIn3x3Region(tileX, tileY);
+                var hasEnoughNeighbors = numSolidsIn3x3Region >= 5;
                 wallsCopy.setTile(tileX, tileY, hasEnoughNeighbors);
             }
         }
@@ -84,6 +85,16 @@ class Level extends Entity
             }
         }
         graphic = tiles;
+    }
+
+    public function export() {
+        var bitstring = walls.saveToString("", "\n", "1", "0");
+        var export =
+'<level width="1920" height="360">
+    <solids exportMode="Bitstring">${bitstring}</solids>
+</level>';
+        sys.io.File.write("../../../test.oel", false);
+        sys.io.File.saveContent("../../../test.oel", export);
     }
 }
 

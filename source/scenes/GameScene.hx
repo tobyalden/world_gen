@@ -31,6 +31,9 @@ class GameScene extends Scene
             level.cellularAutomata();
             level.updateGraphic();
         }
+        else if(Key.pressed(Key.E)) {
+            level.export();
+        }
         super.update();
     }
 }
